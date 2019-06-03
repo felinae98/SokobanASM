@@ -281,6 +281,7 @@ control		proc	uses esi edi ebx ecx, map:ptr byte, action:dword
 		.elseif eax == 2
 			mov		state, 3
 		.endif
+		dec		step
 	.endif
 	mov		edi, map ; reload edi
 	.if action < 10h ; load map
