@@ -85,9 +85,9 @@ int gameResult = control(mapString, 0x10);
 
 // Render statistics
 // emmmm... See documentation for more
-currentSteps = gameResult & 0xffff;
-currentHealth = (gameResult & 0xff0000) >> 16;
-currentStatus = gameResult >> 24;
+int currentSteps = gameResult & 0xffff;
+int currentHealth = (gameResult & 0xff0000) >> 16;
+int currentStatus = gameResult >> 24;
 ```
 
 ---
