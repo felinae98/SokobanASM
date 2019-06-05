@@ -23,6 +23,22 @@ cur_level	byte	0
 easter_m_1	byte	'GGAWE'
 easter_m_2	byte	'WWWWE'
 easter_stat	byte	0
+auto1		byte	10h, 10h, 13h, 13h
+auto2		byte	11h, 11h, 13h
+auto3		byte	12h, 11h, 11h, 13h, 13h, 10h, 10h, 13h, 13h, 10h, 12h, 12h
+auto4		byte	11h, 13h, 13h, 13h, 11h, 12h, 12h, 12h, 13h, 13h, 11h, 13h, 13h, 10h, 10h, 10h
+auto5		byte	11h, 11h, 11h, 13h, 13h, 13h, 13h, 10h, 10h, 12h, 11h, 11h, 12h, 12h, 12h, 10h, 10h, 10h, 13h, 13h 
+			byte	10h, 13h, 11h, 11h, 13h, 11h, 11h, 12h, 12h, 10h, 10h, 13h, 13h, 11h, 12h
+auto6		byte	13h, 11h, 10h, 10h, 13h, 13h, 11h, 11h, 12h, 13h, 13h, 11h, 12h, 10h, 12h, 11h, 10h, 13h, 10h, 10h, 12h, 12h, 11h, 12h, 11h, 13h, 12h, 11h, 13h
+auto7		byte	10h, 12h, 12h, 12h, 12h, 11h, 11h, 13h, 10h, 12h, 10h, 10h, 13h, 13h, 13h, 11h, 13h, 11h, 11h
+			byte	12h, 10h, 12h, 10h, 10h, 13h, 11h, 12h, 11h, 13h, 10h, 13h, 11h, 12h, 12h, 10h, 10h, 12h, 12h, 11h, 13h, 13h, 13h, 12h, 12h, 12h, 11h, 11h, 13h, 10h, 12h, 10h, 13h, 13h
+auto8		byte	12h, 13h, 11h, 11h, 12h, 12h, 11h, 12h, 12h, 10h, 11h, 13h, 13h, 10h, 12h, 11h, 12h, 12h, 10h, 10h, 10h, 13h, 10h, 13h, 13h, 11h, 11h
+			byte	10h, 10h, 12h, 12h, 11h, 12h, 11h, 11h, 11h, 13h, 13h, 10h, 13h, 13h, 12h, 12h, 11h, 12h, 12h, 10h, 13h, 10h, 10h, 11h, 11h, 11h, 13h, 13h, 10h, 12h
+auto9		byte	13h, 12h, 11h, 11h, 13h, 12h, 10h, 10h, 13h, 11h, 12h, 11h, 11h, 13h, 13h, 13h, 10h, 10h, 10h, 12h, 13h, 11h, 11h, 11h, 12h, 12h, 12h, 10h, 10h, 13h, 11h, 13h, 11h, 12h
+autoa		byte	10h, 12h, 10h, 12h, 12h, 12h, 11h, 11h, 13h, 13h, 10h, 13h, 10h, 10h, 13h, 11h, 13h, 11h, 12h, 12h, 10h, 10h, 12h, 12h, 11h, 13h, 13h, 12h, 12h, 12h, 11h, 11h, 13h, 13h, 10h, 13h, 10h, 12h, 11h, 13h, 13h, 13h, 10h, 12h, 12h
+autob		byte	10h, 13h, 13h, 12h, 12h, 12h, 12h, 10h, 10h, 13h, 13h, 13h, 13h, 11h, 13h, 11h, 12h, 12h, 12h, 12h, 11h, 12h
+			byte	10h, 13h, 13h, 13h, 13h, 10h, 10h, 12h, 12h, 11h, 10h, 13h, 13h, 11h, 11h, 12h, 12h, 11h, 12h, 12h, 10h, 13h, 13h, 10h, 10h, 12h, 12h, 11h
+auto_len	byte	3, 2 
 .code
 DllEntry	proc
 	mov		eax, 1
@@ -353,4 +369,34 @@ control		proc	uses esi edi ebx ecx, map:ptr byte, action:dword
 	or		eax, ebx
 	ret
 control		endp
+auto		proc	uses ebx esi, map:ptr byte, map_no:dword, a_step:dword
+	.if map_no == 0
+		mov		esi, offset auto1
+	.elseif	map_no == 1
+		mov		esi, offset auto2
+	.elseif	map_no == 2
+		mov		esi, offset auto3
+	.elseif map_no == 3
+		mov		esi, offset auto4
+	.elseif	map_no == 4
+		mov		esi, offset auto5
+	.elseif	map_no == 5
+		mov		esi, offset auto6
+	.elseif	map_no == 6
+		mov		esi, offset auto7
+	.elseif map_no == 7
+		mov		esi, offset auto8
+	.elseif	map_no == 8
+		mov		esi, offset auto9
+	.elseif	map_no == 9
+		mov		esi, offset autoa
+	.elseif	map_no == 10
+		mov		esi, offset autob
+	.endif
+	add		esi, a_step
+	sub		eax, eax
+	mov		al, [esi]
+	invoke	control, map, eax
+	ret
+auto		endp
 end
