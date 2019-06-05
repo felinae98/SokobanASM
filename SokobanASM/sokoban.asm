@@ -19,6 +19,10 @@ health		byte	5
 stack_size	byte	0
 stack		byte	378 dup(?)
 stack_p		byte	0
+cur_level	byte	0
+easter_m_1	byte	'GGAWE'
+easter_m_2	byte	'WWWWE'
+easter_stat	byte	0
 .code
 DllEntry	proc
 	mov		eax, 1
@@ -99,13 +103,21 @@ move		proc	uses edi ebx ecx edx, map:ptr byte, ppos:dword, fpos:dword, ffpos:dwo
 	mov		ecx, ffpos
 	.if	byte ptr [edi+eax] == 'P' ;standing on groud 
 		mov		up, 'G'
+	.elseif byte ptr [edi+eax] == 'R' ;standing on easter egg
+		mov		up, 'A'
 	.else
 		mov		up, 'T' ; standing on marked place
 	.endif
 	.if byte ptr [edi+ebx] == 'T' ; front is marked place
 		mov		byte ptr [edi+ebx], 'Q'
 		mov		dl, up
-		mov		byte ptr [edi+eax],  dl
+		mov		byte ptr [edi+eax], dl
+		inc		step
+		invoke	stack_push, edi
+	.elseif byte ptr [edi+ebx] == 'A'; front is easter-egg
+		mov		byte ptr [edi+ebx], 'R'
+		mov		dl, up
+		mov		byte ptr [edi+eax], dl
 		inc		step
 		invoke	stack_push, edi
 	.elseif byte ptr [edi+ebx] == 'G'; front is empty groud
@@ -140,6 +152,23 @@ move		proc	uses edi ebx ecx edx, map:ptr byte, ppos:dword, fpos:dword, ffpos:dwo
 	.endif
 	ret
 move		endp
+easter		proc	uses esi edi ecx, map:ptr byte
+	; 4 * 9 + 4 copy 5
+	; 5 * 9 + 4 copy 5
+	lea		esi, easter_m_1
+	mov		edi, map
+	add		edi, 40
+	cld
+	mov		ecx, 5
+	rep		movsb
+	lea		esi, easter_m_2
+	mov		edi, map
+	add		edi, 49
+	cld
+	mov		ecx, 5
+	rep		movsb
+	ret
+easter		endp
 control		proc	uses esi edi ebx ecx, map:ptr byte, action:dword
 	local	ppos:byte
 	local	state:byte
@@ -153,6 +182,7 @@ control		proc	uses esi edi ebx ecx, map:ptr byte, action:dword
 		mov		step, 0
 		mov		health, 5
 		mov		stack_size, 0
+		mov		easter_stat, 0
 	.elseif	action == 1h ; load level 2
 		lea		esi, map2
 		cld
@@ -235,7 +265,7 @@ control		proc	uses esi edi ebx ecx, map:ptr byte, action:dword
 		mov		stack_size, 0
 	.elseif	action == 10h ; move up
 		mov		eax, 0
-		.while		byte ptr [edi+eax] != 'P' && byte ptr [edi+eax] != 'Q'
+		.while		byte ptr [edi+eax] != 'P' && byte ptr [edi+eax] != 'Q' && byte ptr [edi+eax] != 'R'
 			inc			eax
 		.endw
 		mov		ppos, al
@@ -246,7 +276,7 @@ control		proc	uses esi edi ebx ecx, map:ptr byte, action:dword
 		invoke	move, edi, eax, ebx, ecx
 	.elseif action == 11h ; move down
 		mov		eax, 0
-		.while		byte ptr [edi+eax] != 'P' && byte ptr [edi+eax] != 'Q'
+		.while		byte ptr [edi+eax] != 'P' && byte ptr [edi+eax] != 'Q' && byte ptr [edi+eax] != 'R'
 			inc			eax
 		.endw
 		mov		ebx, eax
@@ -256,7 +286,7 @@ control		proc	uses esi edi ebx ecx, map:ptr byte, action:dword
 		invoke	move, edi, eax, ebx, ecx
 	.elseif action == 12h ; move left
 		mov		eax, 0
-		.while		byte ptr [edi+eax] != 'P' && byte ptr [edi+eax] != 'Q'
+		.while		byte ptr [edi+eax] != 'P' && byte ptr [edi+eax] != 'Q' && byte ptr [edi+eax] != 'R'
 			inc			eax
 		.endw
 		mov		ebx, eax
@@ -274,6 +304,17 @@ control		proc	uses esi edi ebx ecx, map:ptr byte, action:dword
 		mov		ecx, ebx
 		add		ecx, 1
 		invoke	move, edi, eax, ebx, ecx
+		; easter egg
+		; 4*9+3
+		.if eax == 39 && cur_level == 0
+			inc		easter_stat
+			.if	easter_stat == 2 ; wall breach
+				mov		bl, 'V'
+				mov		[edi+40], bl ;4*9+4
+			.elseif easter_stat == 4
+				invoke	easter, edi
+			.endif
+		.endif
 	.elseif action == 20h ; go back
 		invoke	stack_pop, edi
 		.if eax == 1
@@ -286,6 +327,9 @@ control		proc	uses esi edi ebx ecx, map:ptr byte, action:dword
 	mov		edi, map ; reload edi
 	.if action < 10h ; load map
 		invoke	stack_push, edi
+		mov		eax, action
+		mov		cur_level, al
+		; set cur_level
 	.endif
 	; check if pass
 	mov		ecx, 0
